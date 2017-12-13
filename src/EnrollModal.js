@@ -1,64 +1,46 @@
 import React, { Component } from 'react';
 import {
-  View, Text, Image, ListView,
+  Text, View, Modal, Image, ListView,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  StyleSheet,
   AsyncStorage,
-  Modal,
-  Button
 } from 'react-native';
-
+import { Actions } from 'react-native-router-flux'
 import DatePicker from 'react-native-datepicker'
-import { Scene, Actions } from 'react-native-router-flux';
-var ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
 
-export default class Home extends Component {
+export default class EnrollModal extends Component {
   constructor(props) {
     super(props);
-
     this.state = {
-      dataSource: ds.cloneWithRows([]),
-      enrollModalVisible: false,
+      enrollModalVisible: true,
       purchaseDate: "",
       expireDate: "",
       alarm0: "",
       item: "",
-      amount: "",
-      rawData: []
-    }
-  }
-  componentWillMount() {
-    this.getList();
+      number: ""
+    };
   }
 
-  getList() {
+  componentWillMount() {
     AsyncStorage.getItem('@BoNengStorage:nengInfo')
       .then((body)=>{
         if (body) {
           let data = JSON.parse(body);
-          this.setState({dataSource: ds.cloneWithRows(data)});
-          console.log(data);
-          this.setState({rawData: data});
+          this.setState(data);
         }
       });
   }
 
   save(){
-    let itemSet = {
+    AsyncStorage.setItem('@BoNengStorage:nengInfo', JSON.stringify({
       item: this.state.item,
-      amount: this.state.amount,
+      number: this.state.number,
       purchaseDate: this.state.purchaseDate,
-      expireDate: this.state.expireDate
-    };
-
-    this.state.rawData.push(itemSet);
-    AsyncStorage.setItem('@BoNengStorage:nengInfo', JSON.stringify(this.state.rawData));
-
-    console.log(this.state.rawData);
+      expireDate: this.state.expireDate,
+      alarm0: this.state.alarm0
+    }));
     this.setState({enrollModalVisible:false});
-    this.getList();
     Actions.pop();
   }
   cancel(){
@@ -67,47 +49,8 @@ export default class Home extends Component {
   }
 
   render () {
-
     return (
       <View>
-        <View>
-          <Image source={require("../src/image/refrigerator.png")}
-                 style={{width:370, height:250, alignContent:"center"}}
-                 resizeMode={"contain"}
-          />
-        </View>
-        <View>
-          <View style={{flexDirection:"row", padding:10, height:30, borderBottomColor:"black", borderWidth:1, alignItems:"center"}}>
-            <Text style={{flex:1}}>No</Text>
-            <Text style={{flex:1, textAlign:"center"}}>품목</Text>
-            <Text style={{flex:1, textAlign:"center"}}>수량</Text>
-            <Text style={{flex:2, textAlign:"center"}}>유통기한</Text>
-            <View style={{flex:1, alignItems:"flex-end", borderBottomColor:"black", borderWidth:1}}>
-              <TouchableOpacity onPress={()=> {this.setState({enrollModalVisible:true})}}>
-                <Image source={require("../src/image/circular-arrow-with-plus-sign.png")}
-                       style={{width:20, height:20}}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-        </View>
-
-        <ListView
-          dataSource={this.state.dataSource}
-          renderRow={(rowData, setion, index) =>
-            <View style={{flexDirection:"row"}}>
-              <Text style={{flex:1, textAlign:"center"}}>{parseInt(index)+1}</Text>
-              <Text style={{flex:1, textAlign:"center"}}>{rowData.item}</Text>
-              <Text style={{flex:1, textAlign:"center"}}>{rowData.amount}</Text>
-              <Text style={{flex:2, textAlign:"center"}}>{rowData.expireDate}</Text>
-            </View>
-          }
-        />
-        <View>
-          <Button onPress={()=> this.getList()} title="불러오기"/>
-        </View>
-
         <Modal animationType="slide"
                transparent={true}
                visible={this.state.enrollModalVisible}
@@ -130,8 +73,8 @@ export default class Home extends Component {
                       <Text style={{flex:1}}>수량</Text>
                       <TextInput
                         style={{flex:1}}
-                        value={this.state.amount}
-                        onChangeText={(amount) => this.setState({amount: amount})}
+                        value={this.state.number}
+                        onChangeText={(number) => this.setState({number: number})}
                         keyboardType={"numeric"}
                         placeholder={"갯수"}
                       />
@@ -201,12 +144,12 @@ export default class Home extends Component {
                   </View>
                   <View style={{flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop:10}}>
                     <TouchableOpacity onPress={()=> this.save()}
-                                      style={{width:50, height:30 ,borderRadius:15, backgroundColor: "red", alignItems: "center", justifyContent:"center"}}>
+                      style={{width:50, height:30 ,borderRadius:15, backgroundColor: "red", alignItems: "center", justifyContent:"center"}}>
                       <Text>확인</Text>
                     </TouchableOpacity>
                     <View style={{width:10}}/>
                     <TouchableOpacity onPress={()=> this.cancel()}
-                                      style={{width:50, height:30 ,borderRadius:15, backgroundColor: "red", alignItems: "center", justifyContent:"center"}}>
+                      style={{width:50, height:30 ,borderRadius:15, backgroundColor: "red", alignItems: "center", justifyContent:"center"}}>
                       <Text>취소</Text>
                     </TouchableOpacity>
                   </View>
@@ -216,6 +159,8 @@ export default class Home extends Component {
           </TouchableWithoutFeedback>
         </Modal>
       </View>
-    );
+    )
   }
 }
+
+module.exports = EnrollModal;
